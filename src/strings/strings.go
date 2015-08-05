@@ -42,9 +42,11 @@ func explode(s string, n int) []string {
 	return a
 }
 
+// 因为primePK需要大于unicode所有字符总数1114112 的素数
 // primeRK is the prime base used in Rabin-Karp algorithm.
 const primeRK = 16777619
 
+// 返回 Rabin-Karp algorithm的hash值 和 primePK的len(sep)次方值
 // hashStr returns the hash and the appropriate multiplicative
 // factor for use in Rabin-Karp algorithm.
 func hashStr(sep string) (uint32, uint32) {
@@ -52,9 +54,12 @@ func hashStr(sep string) (uint32, uint32) {
 	for i := 0; i < len(sep); i++ {
 		hash = hash*primeRK + uint32(sep[i])
 	}
+
+	// 计算 primePK的len(sep)次方值 才用二进制位移位运算,减少循环计算
 	var pow, sq uint32 = 1, primeRK
 	for i := len(sep); i > 0; i >>= 1 {
 		if i&1 != 0 {
+			// 二进制与运算，末位非0
 			pow *= sq
 		}
 		sq *= sq
@@ -62,10 +67,12 @@ func hashStr(sep string) (uint32, uint32) {
 	return hash, pow
 }
 
+// 反向sep的Rabin-Karp的hash值 和 primePK的len(sep)次方值
 // hashStrRev returns the hash of the reverse of sep and the
 // appropriate multiplicative factor for use in Rabin-Karp algorithm.
 func hashStrRev(sep string) (uint32, uint32) {
 	hash := uint32(0)
+	//倒序而已，同上
 	for i := len(sep) - 1; i >= 0; i-- {
 		hash = hash*primeRK + uint32(sep[i])
 	}
@@ -79,6 +86,7 @@ func hashStrRev(sep string) (uint32, uint32) {
 	return hash, pow
 }
 
+// 计算sep在s中出现的次数,如果sep为空，则返回s的unicode的字节数+1
 // Count counts the number of non-overlapping instances of sep in s.
 // If sep is an empty string, Count returns 1 + the number of Unicode code points in s.
 func Count(s, sep string) int {
@@ -86,6 +94,7 @@ func Count(s, sep string) int {
 	// special cases
 	switch {
 	case len(sep) == 0:
+		// 返回s的unicode的字节数
 		return utf8.RuneCountInString(s) + 1
 	case len(sep) == 1:
 		// special case worth making fast
@@ -111,10 +120,12 @@ func Count(s, sep string) int {
 		h = h*primeRK + uint32(s[i])
 	}
 	lastmatch := 0
+	// 从len(sep)长度的s的一个序列开始比较
 	if h == hashsep && s[:len(sep)] == sep {
 		n++
 		lastmatch = len(sep)
 	}
+	// 详见Rabin-karp查找算法
 	for i := len(sep); i < len(s); {
 		h *= primeRK
 		h += uint32(s[i])
@@ -128,21 +139,25 @@ func Count(s, sep string) int {
 	return n
 }
 
+// 在 s中是否包含子串substr
 // Contains reports whether substr is within s.
 func Contains(s, substr string) bool {
 	return Index(s, substr) >= 0
 }
 
+// 在s中是否包含chars中任何一个字符
 // ContainsAny reports whether any Unicode code points in chars are within s.
 func ContainsAny(s, chars string) bool {
 	return IndexAny(s, chars) >= 0
 }
 
+// 在s中是否包含r字符（r只能是一个字符）
 // ContainsRune reports whether the Unicode code point r is within s.
 func ContainsRune(s string, r rune) bool {
 	return IndexRune(s, r) >= 0
 }
 
+// 在s中顺序查找sep第一个匹配成功的index, 如果没有，则返回-1,
 // Index returns the index of the first instance of sep in s, or -1 if sep is not present in s.
 func Index(s, sep string) int {
 	n := len(sep)
@@ -180,6 +195,7 @@ func Index(s, sep string) int {
 	return -1
 }
 
+// 在s中倒序查找sep第一个匹配成功的index, 如果没有，则返回-1,
 // LastIndex returns the index of the last instance of sep in s, or -1 if sep is not present in s.
 func LastIndex(s, sep string) int {
 	n := len(sep)
