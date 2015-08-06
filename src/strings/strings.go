@@ -94,7 +94,7 @@ func Count(s, sep string) int {
 	// special cases
 	switch {
 	case len(sep) == 0:
-		// 返回s的unicode的字节数
+		// 返回s的字符数
 		return utf8.RuneCountInString(s) + 1
 	case len(sep) == 1:
 		// special case worth making fast
@@ -233,11 +233,13 @@ func LastIndex(s, sep string) int {
 	return -1
 }
 
+// 在s中查询r字符，返回index,如没有，则返回-1
 // IndexRune returns the index of the first instance of the Unicode code point
 // r, or -1 if rune is not present in s.
 func IndexRune(s string, r rune) int {
 	switch {
 	case r < utf8.RuneSelf:
+		// 单字节字符
 		return IndexByte(s, byte(r))
 	default:
 		for i, c := range s {
@@ -249,11 +251,13 @@ func IndexRune(s string, r rune) int {
 	return -1
 }
 
+// 在s中顺序查询任意chars里面的一个字符，返回第一个匹配成功的index，如无，则返回-1
 // IndexAny returns the index of the first instance of any Unicode code point
 // from chars in s, or -1 if no Unicode code point from chars is present in s.
 func IndexAny(s, chars string) int {
 	if len(chars) > 0 {
 		for i, c := range s {
+			// string range是按字符分割  len(string)是unicode字节数
 			for _, m := range chars {
 				if c == m {
 					return i
@@ -264,12 +268,14 @@ func IndexAny(s, chars string) int {
 	return -1
 }
 
+// 在s中倒序查询任意chars里面的一个字符，返回第一个匹配成功的index，如无，则返回-1
 // LastIndexAny returns the index of the last instance of any Unicode code
 // point from chars in s, or -1 if no Unicode code point from chars is
 // present in s.
 func LastIndexAny(s, chars string) int {
 	if len(chars) > 0 {
 		for i := len(s); i > 0; {
+			// string range是按字符分割  len(string)是unicode字节数, 所以每次拿出string最后一个未比较的字符
 			rune, size := utf8.DecodeLastRuneInString(s[0:i])
 			i -= size
 			for _, m := range chars {
@@ -292,6 +298,7 @@ func LastIndexByte(s string, c byte) int {
 	return -1
 }
 
+// 按sep分割s成[n]string, 注意sepSave
 // Generic split: splits after each instance of sep,
 // including sepSave bytes of sep in the subarrays.
 func genSplit(s, sep string, sepSave, n int) []string {
@@ -320,6 +327,7 @@ func genSplit(s, sep string, sepSave, n int) []string {
 	return a[0 : na+1]
 }
 
+// 不包含sep
 // SplitN slices s into substrings separated by sep and returns a slice of
 // the substrings between those separators.
 // If sep is empty, SplitN splits after each UTF-8 sequence.
@@ -329,6 +337,7 @@ func genSplit(s, sep string, sepSave, n int) []string {
 //   n < 0: all substrings
 func SplitN(s, sep string, n int) []string { return genSplit(s, sep, 0, n) }
 
+// 在sep后开始分割,包含sep
 // SplitAfterN slices s into substrings after each instance of sep and
 // returns a slice of those substrings.
 // If sep is empty, SplitAfterN splits after each UTF-8 sequence.
@@ -354,6 +363,7 @@ func SplitAfter(s, sep string) []string {
 	return genSplit(s, sep, len(sep), -1)
 }
 
+// 将s已空格分段
 // Fields splits the string s around each instance of one or more consecutive white space
 // characters, as defined by unicode.IsSpace, returning an array of substrings of s or an
 // empty list if s contains only white space.
@@ -361,6 +371,7 @@ func Fields(s string) []string {
 	return FieldsFunc(s, unicode.IsSpace)
 }
 
+// 以func单字符判断,将s分段
 // FieldsFunc splits the string s at each run of Unicode code points c satisfying f(c)
 // and returns an array of slices of s. If all code points in s satisfy f(c) or the
 // string is empty, an empty slice is returned.
@@ -390,6 +401,7 @@ func FieldsFunc(s string, f func(rune) bool) []string {
 				fieldStart = -1
 			}
 		} else if fieldStart == -1 {
+			// 记录第一个匹配不上的index
 			fieldStart = i
 		}
 	}
@@ -399,6 +411,7 @@ func FieldsFunc(s string, f func(rune) bool) []string {
 	return a
 }
 
+// 用sep拼接[]string，变成string
 // Join concatenates the elements of a to create a single string.   The separator string
 // sep is placed between elements in the resulting string.
 func Join(a []string, sep string) string {
@@ -432,6 +445,7 @@ func HasSuffix(s, suffix string) bool {
 	return len(s) >= len(suffix) && s[len(s)-len(suffix):] == suffix
 }
 
+// 根据func修改替换每一个s的字符
 // Map returns a copy of the string s with all its characters modified
 // according to the mapping function. If mapping returns a negative value, the character is
 // dropped from the string with no replacement.
@@ -475,6 +489,7 @@ func Map(mapping func(rune) rune, s string) string {
 	return string(b[0:nbytes])
 }
 
+// 重复count个s
 // Repeat returns a new string consisting of count copies of the string s.
 func Repeat(s string, count int) string {
 	b := make([]byte, len(s)*count)
@@ -486,9 +501,11 @@ func Repeat(s string, count int) string {
 	return string(b)
 }
 
+// 全部转为大写
 // ToUpper returns a copy of the string s with all Unicode letters mapped to their upper case.
 func ToUpper(s string) string { return Map(unicode.ToUpper, s) }
 
+// 全部转为小写
 // ToLower returns a copy of the string s with all Unicode letters mapped to their lower case.
 func ToLower(s string) string { return Map(unicode.ToLower, s) }
 
@@ -513,6 +530,7 @@ func ToTitleSpecial(_case unicode.SpecialCase, s string) string {
 	return Map(func(r rune) rune { return _case.ToTitle(r) }, s)
 }
 
+// 判断是否分隔符
 // isSeparator reports whether the rune could mark a word boundary.
 // TODO: update when package unicode captures more of the properties.
 func isSeparator(r rune) bool {
