@@ -509,6 +509,7 @@ func ToUpper(s string) string { return Map(unicode.ToUpper, s) }
 // ToLower returns a copy of the string s with all Unicode letters mapped to their lower case.
 func ToLower(s string) string { return Map(unicode.ToLower, s) }
 
+// 英文单词大写
 // ToTitle returns a copy of the string s with all Unicode letters mapped to their title case.
 func ToTitle(s string) string { return Map(unicode.ToTitle, s) }
 
@@ -556,6 +557,7 @@ func isSeparator(r rune) bool {
 	return unicode.IsSpace(r)
 }
 
+// 英文单词头大写
 // Title returns a copy of the string s with all Unicode letters that begin words
 // mapped to their title case.
 //
@@ -577,6 +579,7 @@ func Title(s string) string {
 		s)
 }
 
+// 从左边割去func匹配的字符
 // TrimLeftFunc returns a slice of the string s with all leading
 // Unicode code points c satisfying f(c) removed.
 func TrimLeftFunc(s string, f func(rune) bool) string {
@@ -587,6 +590,7 @@ func TrimLeftFunc(s string, f func(rune) bool) string {
 	return s[i:]
 }
 
+// 从右边割去func匹配的字符
 // TrimRightFunc returns a slice of the string s with all trailing
 // Unicode code points c satisfying f(c) removed.
 func TrimRightFunc(s string, f func(rune) bool) string {
@@ -600,24 +604,28 @@ func TrimRightFunc(s string, f func(rune) bool) string {
 	return s[0:i]
 }
 
+// 左右两边都割去func匹配的字符
 // TrimFunc returns a slice of the string s with all leading
 // and trailing Unicode code points c satisfying f(c) removed.
 func TrimFunc(s string, f func(rune) bool) string {
 	return TrimRightFunc(TrimLeftFunc(s, f), f)
 }
 
+// 返回func匹配的字符index
 // IndexFunc returns the index into s of the first Unicode
 // code point satisfying f(c), or -1 if none do.
 func IndexFunc(s string, f func(rune) bool) int {
 	return indexFunc(s, f, true)
 }
 
+// 倒序匹配func匹配的字符index
 // LastIndexFunc returns the index into s of the last
 // Unicode code point satisfying f(c), or -1 if none do.
 func LastIndexFunc(s string, f func(rune) bool) int {
 	return lastIndexFunc(s, f, true)
 }
 
+// 返回第一个func匹配的index
 // indexFunc is the same as IndexFunc except that if
 // truth==false, the sense of the predicate function is
 // inverted.
@@ -627,7 +635,9 @@ func indexFunc(s string, f func(rune) bool, truth bool) int {
 		wid := 1
 		r := rune(s[start])
 		if r >= utf8.RuneSelf {
+			// 如果市多字节字符
 			r, wid = utf8.DecodeRuneInString(s[start:])
+			// 第一个字符 和他的字节数
 		}
 		if f(r) == truth {
 			return start
@@ -637,6 +647,7 @@ func indexFunc(s string, f func(rune) bool, truth bool) int {
 	return -1
 }
 
+// 返回最后一个func匹配的index
 // lastIndexFunc is the same as LastIndexFunc except that if
 // truth==false, the sense of the predicate function is
 // inverted.
@@ -706,6 +717,7 @@ func TrimSuffix(s, suffix string) string {
 	return s
 }
 
+// 替换字符,如果old为空，则在s每一个字符前面和最后尾部接上new,
 // Replace returns a copy of the string s with the first n
 // non-overlapping instances of old replaced by new.
 // If old is empty, it matches at the beginning of the string
